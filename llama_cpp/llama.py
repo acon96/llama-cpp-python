@@ -202,7 +202,12 @@ class Llama:
         set_verbose(verbose)
 
         if not Llama.__backend_initialized:
+            lib_folder = (Path(__file__).parent / "lib").as_posix()
+            if self.verbose:
+                print(f"Loading backends from {lib_folder}...")
+            
             with suppress_stdout_stderr(disable=verbose):
+                llama_cpp.ggml_backend_load_all_from_path(lib_folder.encode())
                 llama_cpp.llama_backend_init()
             Llama.__backend_initialized = True
 

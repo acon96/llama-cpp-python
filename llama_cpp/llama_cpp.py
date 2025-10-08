@@ -9,6 +9,7 @@ from typing import (
     Union,
     NewType,
     Optional,
+    List,
     TYPE_CHECKING,
 )
 
@@ -657,13 +658,13 @@ class llama_model_kv_override(ctypes.Structure):
 
 # struct llama_model_tensor_buft_override {
 #     const char * pattern;
-#     ggml_backend_buffer_type_t buft;
+#     ggml_,buffer_type_t buft;
 # };
 
 
 # struct llama_model_params {
 #     // NULL-terminated list of devices to use for offloading (if NULL, all available devices are used)
-#     ggml_backend_dev_t * devices;
+#     ggml_dev_t * devices;
 
 #     // NULL-terminated list of buffer types to use for tensors that match a pattern
 #     const struct llama_model_tensor_buft_override * tensor_buft_overrides;
@@ -1404,17 +1405,6 @@ def llama_pooling_type(ctx: llama_context_p, /) -> int:
     ...
 
 
-# DEPRECATED(LLAMA_API struct llama_kv_cache * llama_get_kv_self(struct llama_context * ctx), "use llama_get_memory instead");
-@ctypes_function(
-    "llama_get_kv_self",
-    [llama_context_p_ctypes],
-    llama_kv_cache_p_ctypes,
-)
-def llama_get_kv_self(ctx: llama_context_p, /) -> Optional[llama_kv_cache_p]:
-    """Get the KV cache for self-attention (DEPRECATED)"""
-    ...
-
-
 # LLAMA_API const struct llama_vocab * llama_model_get_vocab(const struct llama_model * model);
 @ctypes_function("llama_model_get_vocab", [llama_model_p_ctypes], llama_vocab_p_ctypes)
 def llama_model_get_vocab(model: llama_model_p, /) -> Optional[llama_vocab_p]:
@@ -2033,258 +2023,6 @@ def llama_memory_seq_pos_max(
 @ctypes_function("llama_memory_can_shift", [llama_memory_t_ctypes], ctypes.c_bool)
 def llama_memory_can_shift(mem: llama_memory_t, /) -> bool:
     """Check if the memory supports shifting"""
-    ...
-
-
-# //
-# // KV cache for self-attention (TODO: deprecate in favor of llama_memory)
-# //
-
-# // Returns the number of tokens in the KV cache (slow, use only for debug)
-# // If a KV cell has multiple sequences assigned to it, it will be counted multiple times
-# DEPRECATED(LLAMA_API int32_t llama_kv_self_n_tokens(const struct llama_context * ctx),
-#            "Use llama_kv_self_seq_pos_max() and llama_kv_self_seq_pos_min() instead (https://github.com/ggml-org/llama.cpp/issues/13793)");
-@ctypes_function(
-    "llama_kv_self_n_tokens", [llama_context_p_ctypes], ctypes.c_int32
-)
-def llama_kv_self_n_tokens(ctx: llama_context_p, /) -> int:
-    """Returns the number of tokens in the KV cache (slow, use only for debug) (DEPRECATED)"""
-    ...
-
-
-# // Returns the number of used KV cells (i.e. have at least one sequence assigned to them)
-# DEPRECATED(LLAMA_API int32_t llama_kv_self_used_cells(const struct llama_context * ctx),
-#            "Use llama_kv_self_seq_pos_max() and llama_kv_self_seq_pos_min() instead (https://github.com/ggml-org/llama.cpp/issues/13793)");
-@ctypes_function(
-    "llama_kv_self_used_cells", [llama_context_p_ctypes], ctypes.c_int32
-)
-def llama_kv_self_used_cells(ctx: llama_context_p, /) -> int:
-    """Returns the number of used KV cells (DEPRECATED)"""
-    ...
-
-
-# // Clear the KV cache - both cell info is erased and KV data is zeroed
-# DEPRECATED(LLAMA_API void llama_kv_self_clear(
-#             struct llama_context * ctx),
-#         "Use llama_memory_clear() instead");
-@ctypes_function(
-    "llama_kv_self_clear", [llama_context_p_ctypes], None
-)
-def llama_kv_self_clear(ctx: llama_context_p, /):
-    """Clear the KV cache (DEPRECATED)"""
-    ...
-
-
-# // Removes all tokens that belong to the specified sequence and have positions in [p0, p1)
-# // Returns false if a partial sequence cannot be removed. Removing a whole sequence never fails
-# // seq_id < 0 : match any sequence
-# // p0 < 0     : [0,  p1]
-# // p1 < 0     : [p0, inf)
-# DEPRECATED(LLAMA_API bool llama_kv_self_seq_rm(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id,
-#                    llama_pos   p0,
-#                    llama_pos   p1),
-#         "Use llama_memory_seq_rm() instead");
-@ctypes_function(
-    "llama_kv_self_seq_rm",
-    [
-        llama_context_p_ctypes,
-        llama_seq_id,
-        llama_pos,
-        llama_pos,
-    ],
-    ctypes.c_bool,
-)
-def llama_kv_self_seq_rm(
-    ctx: llama_context_p,
-    seq_id: Union[llama_seq_id, int],
-    p0: Union[llama_pos, int],
-    p1: Union[llama_pos, int],
-    /,
-) -> bool:
-    """Remove tokens from KV cache (DEPRECATED)"""
-    ...
-
-
-# // Copy all tokens that belong to the specified sequence to another sequence
-# // Note that this does not allocate extra KV cache memory - it simply assigns the tokens to the new sequence
-# // p0 < 0 : [0,  p1]
-# // p1 < 0 : [p0, inf)
-# DEPRECATED(LLAMA_API void llama_kv_self_seq_cp(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id_src,
-#                 llama_seq_id   seq_id_dst,
-#                    llama_pos   p0,
-#                    llama_pos   p1),
-#         "Use llama_memory_seq_cp() instead");
-@ctypes_function(
-    "llama_kv_self_seq_cp",
-    [
-        llama_context_p_ctypes,
-        llama_seq_id,
-        llama_seq_id,
-        llama_pos,
-        llama_pos,
-    ],
-    None,
-)
-def llama_kv_self_seq_cp(
-    ctx: llama_context_p,
-    seq_id_src: Union[llama_seq_id, int],
-    seq_id_dst: Union[llama_seq_id, int],
-    p0: Union[llama_pos, int],
-    p1: Union[llama_pos, int],
-    /,
-):
-    """Copy tokens in KV cache (DEPRECATED)"""
-    ...
-
-
-# // Removes all tokens that do not belong to the specified sequence
-# DEPRECATED(LLAMA_API void llama_kv_self_seq_keep(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id),
-#         "Use llama_memory_seq_keep() instead");
-@ctypes_function(
-    "llama_kv_self_seq_keep", [llama_context_p_ctypes, llama_seq_id], None
-)
-def llama_kv_self_seq_keep(ctx: llama_context_p, seq_id: Union[llama_seq_id, int], /):
-    """Keep only specified sequence in KV cache (DEPRECATED)"""
-    ...
-
-
-# // Adds relative position "delta" to all tokens that belong to the specified sequence and have positions in [p0, p1)
-# // If the KV cache is RoPEd, the KV data is updated accordingly:
-# //   - lazily on next llama_decode()
-# // p0 < 0 : [0,  p1]
-# // p1 < 0 : [p0, inf)
-# DEPRECATED(LLAMA_API void llama_kv_self_seq_add(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id,
-#                    llama_pos   p0,
-#                    llama_pos   p1,
-#                    llama_pos   delta),
-#         "Use llama_memory_seq_add() instead");
-@ctypes_function(
-    "llama_kv_self_seq_add",
-    [
-        llama_context_p_ctypes,
-        llama_seq_id,
-        llama_pos,
-        llama_pos,
-        llama_pos,
-    ],
-    None,
-)
-def llama_kv_self_seq_add(
-    ctx: llama_context_p,
-    seq_id: Union[llama_seq_id, int],
-    p0: Union[llama_pos, int],
-    p1: Union[llama_pos, int],
-    delta: Union[llama_pos, int],
-    /,
-):
-    """Add delta to sequence positions in KV cache (DEPRECATED)"""
-    ...
-
-
-# // Integer division of the positions by factor of `d > 1`
-# // If the KV cache is RoPEd, the KV data is updated accordingly:
-# //   - lazily on next llama_decode()
-# // p0 < 0 : [0,  p1]
-# // p1 < 0 : [p0, inf)
-# DEPRECATED(LLAMA_API void llama_kv_self_seq_div(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id,
-#                    llama_pos   p0,
-#                    llama_pos   p1,
-#                          int   d),
-#         "Use llama_memory_seq_div() instead");
-@ctypes_function(
-    "llama_kv_self_seq_div",
-    [
-        llama_context_p_ctypes,
-        llama_seq_id,
-        llama_pos,
-        llama_pos,
-        ctypes.c_int,
-    ],
-    None,
-)
-def llama_kv_self_seq_div(
-    ctx: llama_context_p,
-    seq_id: Union[llama_seq_id, int],
-    p0: Union[llama_pos, int],
-    p1: Union[llama_pos, int],
-    d: Union[ctypes.c_int, int],
-    /,
-):
-    """Divide sequence positions in KV cache (DEPRECATED)"""
-    ...
-
-
-# // Returns the smallest position present in the KV cache for the specified sequence
-# // This is typically non-zero only for SWA caches
-# // Note that all positions in the range [pos_min, pos_max] are guaranteed to be present in the KV cache
-# // Return -1 if the sequence is empty
-# DEPRECATED(LLAMA_API llama_pos llama_kv_self_seq_pos_min(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id),
-#         "Use llama_memory_seq_pos_min() instead");
-@ctypes_function(
-    "llama_kv_self_seq_pos_min", [llama_context_p_ctypes, llama_seq_id], llama_pos
-)
-def llama_kv_self_seq_pos_min(
-    ctx: llama_context_p, seq_id: Union[llama_seq_id, int], /
-) -> int:
-    """Returns the smallest position in KV cache for sequence (DEPRECATED)"""
-    ...
-
-
-# // Returns the largest position present in the KV cache for the specified sequence
-# // Note that all positions in the range [pos_min, pos_max] are guaranteed to be present in the KV cache
-# // Return -1 if the sequence is empty
-# DEPRECATED(LLAMA_API llama_pos llama_kv_self_seq_pos_max(
-#         struct llama_context * ctx,
-#                 llama_seq_id   seq_id),
-#         "Use llama_memory_seq_pos_max() instead");
-@ctypes_function(
-    "llama_kv_self_seq_pos_max", [llama_context_p_ctypes, llama_seq_id], llama_pos
-)
-def llama_kv_self_seq_pos_max(
-    ctx: llama_context_p, seq_id: Union[llama_seq_id, int], /
-) -> int:
-    """Returns the largest position in KV cache for sequence (DEPRECATED)"""
-    ...
-
-
-# // Defragment the KV cache
-# // This will be applied:
-# //   - lazily on next llama_decode()
-# DEPRECATED(LLAMA_API void llama_kv_self_defrag(struct llama_context * ctx),
-#         "simply remove this call, the context will automatically decide when to do a defragmentation based on 'defrag_thold'");
-@ctypes_function("llama_kv_self_defrag", [llama_context_p_ctypes], None)
-def llama_kv_self_defrag(ctx: llama_context_p, /):
-    """Defragment the KV cache (DEPRECATED)"""
-    ...
-
-
-# // Check if the context supports KV cache shifting
-# DEPRECATED(LLAMA_API bool llama_kv_self_can_shift(const struct llama_context * ctx),
-#         "use llama_memory_can_shift() instead");
-@ctypes_function("llama_kv_self_can_shift", [llama_context_p_ctypes], ctypes.c_bool)
-def llama_kv_self_can_shift(ctx: llama_context_p, /) -> bool:
-    """Check if the context supports KV cache shifting (DEPRECATED)"""
-    ...
-
-
-# // Apply the KV cache updates (such as K-shifts, defragmentation, etc.)
-# DEPRECATED(LLAMA_API void llama_kv_self_update(struct llama_context * ctx),
-#         "simply remove this call, updates are applied lazily on the next llama_decode()");
-@ctypes_function("llama_kv_self_update", [llama_context_p_ctypes], None)
-def llama_kv_self_update(ctx: llama_context_p, /):
-    """Apply the KV cache updates (DEPRECATED)"""
     ...
 
 
@@ -3802,15 +3540,6 @@ def llama_sampler_init_dist(seed: int) -> llama_sampler_p:
     ...
 
 
-# /// @details Sorts candidate tokens by their logits in descending order and calculate probabilities based on logits.
-# /// NOTE: Avoid using on the full vocabulary as the sorting can become slow. For example, apply top-k or top-p sampling first.
-# DEPRECATED(LLAMA_API struct llama_sampler * llama_sampler_init_softmax    (void),
-#     "will be removed in the future (see https://github.com/ggml-org/llama.cpp/pull/9896#discussion_r1800920915)");
-@ctypes_function("llama_sampler_init_softmax", [], llama_sampler_p_ctypes)
-def llama_sampler_init_softmax() -> llama_sampler_p:
-    ...
-
-
 # /// @details Top-K sampling described in academic paper "The Curious Case of Neural Text Degeneration" https://arxiv.org/abs/1904.09751
 # /// Setting k <= 0 makes this a noop
 # LLAMA_API struct llama_sampler * llama_sampler_init_top_k      (int32_t k);
@@ -4371,4 +4100,35 @@ def llama_opt_epoch(
     callback_eval: ctypes.c_void_p,
     /,
 ):
+    ...
+
+
+# GGML_API ggml_backend_reg_t ggml_backend_load(const char * path);
+@ctypes_function(
+    "ggml_backend_load",
+    [ctypes.c_char_p],
+    ctypes.c_void_p, # FIXME: should be ggml_backend_reg_t
+)
+def ggml_backend_load(path: str):
+    """Load the specified ggml backend"""
+    ...
+
+# GGML_API void               ggml_backend_load_all(void);
+@ctypes_function(
+    "ggml_backend_load_all",
+    [],
+    None,
+)
+def ggml_backend_load_all():
+    """Load all available ggml backends"""
+    ...
+
+# GGML_API void               ggml_backend_load_all_from_path(const char * dir_path);
+@ctypes_function(
+    "ggml_backend_load_all_from_path",
+    [ctypes.c_char_p],
+    None,
+)
+def ggml_backend_load_all_from_path(dir_path: bytes):
+    """Load all ggml backends from the specified directory"""
     ...

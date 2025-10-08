@@ -62,6 +62,8 @@ if (LLAMA_BUILD)
     # Enable building of the common library
     set(LLAMA_BUILD_COMMON ON CACHE BOOL "Build llama.cpp common library" FORCE)
 
+    set(GGML_BACKEND_DL ON CACHE BOOL "Use dynamic linking for GGML backends" FORCE)
+
     # Disable building curl support
     set(LLAMA_CURL OFF CACHE BOOL "llama.cpp: enable curl" FORCE)
 
@@ -96,6 +98,9 @@ if (LLAMA_BUILD)
         set(GGML_METAL_EMBED_LIBRARY "ON" CACHE BOOL "ggml: embed metal library" FORCE)
     endif()
 
+    if (NOT GGML_NATIVE)
+        set(GGML_CPU_ALL_VARIANTS ON CACHE BOOL "Enable all CPU variants" FORCE)
+    endif()
 
     add_subdirectory(vendor/llama.cpp)
 
@@ -122,6 +127,29 @@ if (LLAMA_BUILD)
     llama_cpp_python_install_target(ggml-rpc)
     llama_cpp_python_install_target(ggml-sycl)
     llama_cpp_python_install_target(ggml-vulkan)
+
+    # include individually compiled backends
+    llama_cpp_python_install_target(ggml-cpu-alderlake)
+    llama_cpp_python_install_target(ggml-cpu-haswell)
+    llama_cpp_python_install_target(ggml-cpu-icelake)
+    llama_cpp_python_install_target(ggml-cpu-sandybridge)
+    llama_cpp_python_install_target(ggml-cpu-sapphirerapids)
+    llama_cpp_python_install_target(ggml-cpu-skylakex)
+    llama_cpp_python_install_target(ggml-cpu-sse42)
+    llama_cpp_python_install_target(ggml-cpu-x64)
+
+    llama_cpp_python_install_target(ggml-cpu-armv8.0_1)
+    llama_cpp_python_install_target(ggml-cpu-armv8.2_1)
+    llama_cpp_python_install_target(ggml-cpu-armv8.2_2)
+    llama_cpp_python_install_target(ggml-cpu-armv8.2_3)
+    llama_cpp_python_install_target(ggml-cpu-armv8.6_1)
+    llama_cpp_python_install_target(ggml-cpu-armv8.6_2)
+    llama_cpp_python_install_target(ggml-cpu-armv9.2_1)
+    llama_cpp_python_install_target(ggml-cpu-armv9.2_2)
+
+    llama_cpp_python_install_target(ggml-cpu-apple_m1)
+    llama_cpp_python_install_target(ggml-cpu-apple_m2_m3)
+    llama_cpp_python_install_target(ggml-cpu-apple_m4)
 
     # Workaround for Windows + CUDA https://github.com/abetlen/llama-cpp-python/issues/563
     if (WIN32)

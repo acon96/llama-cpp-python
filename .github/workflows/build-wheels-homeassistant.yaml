@@ -1,0 +1,102 @@
+name: Build Wheels for Home Assistant
+
+on: 
+  workflow_run:
+    workflows: ["Update llama.cpp Weekly"]
+    types:
+      - completed
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build_wheels:
+    name: Build wheels for ${{ matrix.arch }}-python3.${{ matrix.python3_version }}
+    runs-on: ${{ matrix.os }}
+    outputs:
+      tag: ${{ steps.vars.outputs.latest_tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # FIXME: 32 bit is disabled because llamacpp is broken on 32 bit musl systems
+        include:
+        # ARM64
+        - arch: "aarch64"
+          os: "ubuntu-24.04-arm"
+          python3_version: 13
+          
+        # 32bit ARM (Raspberry pis)
+        # - arch: "armv7l"
+        #   os: "ubuntu-24.04-arm"
+        #   python3_version: 13
+
+        # x64
+        - arch: "x86_64"
+          os: "ubuntu-24.04"
+          python3_version: 13
+
+        # 32 bit for older processors
+        # - arch: "i686"
+        #   os: "ubuntu-24.04"
+        #   python3_version: 13
+        
+    steps:
+      - name: Find latest tag to check out
+        id: vars
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "This is a tag build"
+            echo "latest_tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "This is not a tag build"
+            latest_tag=$(git ls-remote --tags https://github.com/acon96/llama-cpp-python.git | awk -F/ '{print $3}' | sort -V | tail -n 1)
+            echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          ref: ${{ steps.vars.outputs.latest_tag }}
+
+      - name: Set package version
+        run: |
+          tag="${{ steps.vars.outputs.latest_tag }}"
+          sed -i -E "s/^(__version__ *= *\")[^\"]+\"/\1${tag}\"/" llama_cpp/__init__.py
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.2.0
+        env:
+          CIBW_SKIP: "*manylinux* pp*"
+          CIBW_REPAIR_WHEEL_COMMAND: ""
+          CIBW_ARCHS: "${{ matrix.arch }}"
+          CIBW_ENVIRONMENT: CMAKE_ARGS="-DLLAVA_BUILD=OFF -DGGML_NATIVE=OFF"
+          CIBW_BUILD: "cp3${{ matrix.python3_version }}-*"
+        with:
+          output-dir: artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./artifacts/*.whl
+          name: artifact_${{ matrix.arch }}
+
+  release:
+    name: Create Release
+    needs: [ build_wheels ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build_wheels.outputs.tag }}
+          files: dist/*
+          make_latest: true

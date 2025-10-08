@@ -1,0 +1,39 @@
+name: Update llama.cpp Weekly
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # Runs every Sunday at 03:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  update-llamacpp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: "recursive"
+
+      - name: Commit changes and push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          ver=$(python3 -c "import re; f=open('llama_cpp/__init__.py').read(); print(re.search(r'__version__\s*=\s*[\'\"]([^\'\"]+)[\'\"]', f).group(1))")
+
+          pushd vendor/llama.cpp
+          git pull origin master
+          llamacpp_tag=$(git describe --tags --abbrev=0 || echo master)
+          popd
+
+          git add vendor/llama.cpp
+          git commit -m "Update llama.cpp to $llamacpp_tag" || echo "No changes to commit"
+
+          BRANCH="llama-cpp-${llamacpp_tag}"
+          TAG="${ver}+${llamacpp_tag}"
+
+          git checkout -b "$BRANCH" || git checkout "$BRANCH"
+          git tag "$TAG"
+          git push origin "$BRANCH"
+          git push origin "$TAG"
