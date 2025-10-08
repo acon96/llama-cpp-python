@@ -68,7 +68,7 @@ headers+=('--header' 'content-type: application/json')
 for release in $releases; do
     log_info "Processing release: $release"
     response=$(curl -s "${headers[@]}" \
-                    "https://api.github.com/repos/abetlen/llama-cpp-python/releases/tags/$release")
+                    "https://api.github.com/repos/acon96/llama-cpp-python/releases/tags/$release")
     
     if [ -z "$response" ]; then
         log_error "Empty response from GitHub API for release $release"
@@ -82,7 +82,9 @@ for release in $releases; do
     fi
 
     # Get release version from release ie v0.1.0-cu121 -> v0.1.0
-    release_version=$(echo "$release" | grep -oE "^[v]?[0-9]+\.[0-9]+\.[0-9]+")
+    # release_version=$(echo "$release" | grep -oE "^[v]?[0-9]+\.[0-9]+\.[0-9]+")
+    # FIXME: this ensures we replace the + sign in versions like 0.1.0+b0034
+    release_version=$(echo $release | sed 's/%2B/+/g')
     echo "    <h2>$release_version</h2>" >> "$output_dir/llama-cpp-python/index.html"
     
     wheel_urls=$(echo "$response" | jq -r '.assets[] | select(.name | endswith(".whl")) | .browser_download_url')

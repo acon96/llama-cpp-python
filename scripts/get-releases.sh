@@ -24,12 +24,15 @@ get_all_releases() {
             return 1
         fi
 
-        new_releases=$(echo "$response" | jq -r '.[].tag_name' | while read -r tag; do
-            printf '%s\n' "$tag" | jq -s -R -r @uri
-        done)
+        new_releases=$(echo "$response" | jq -r '.[].tag_name')
         if [ -z "$new_releases" ]; then
             break
         fi
+
+        new_releases=$(echo "$new_releases" | tr ' ' '\n' | while read -r tag; do
+            tr -d '\n' <<< "$tag" | jq -rRs @uri
+        done |  tr '\n' ' ')
+
         releases="$releases $new_releases"
         ((page++))
     done
