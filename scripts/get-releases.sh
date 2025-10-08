@@ -24,7 +24,9 @@ get_all_releases() {
             return 1
         fi
 
-        new_releases=$(echo "$response" | jq -r '.[].tag_name')
+        new_releases=$(echo "$response" | jq -r '.[].tag_name' | while read -r tag; do
+            printf '%s\n' "$tag" | jq -s -R -r @uri
+        done)
         if [ -z "$new_releases" ]; then
             break
         fi
