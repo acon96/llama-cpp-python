@@ -86,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ./artifacts/*.whl
-          name: artifact_${{ matrix.arch }}
+          name: artifact_${{ matrix.arch }}_py3${{ matrix.python3_version }}
 
   release:
     name: Create Release
