@@ -1237,6 +1237,36 @@ def llama_flash_attn_type_name(flash_attn_type: int, /) -> Optional[bytes]:
     ...
 
 
+# GGML_API ggml_backend_reg_t ggml_backend_load(const char * path);
+@ctypes_function(
+    "ggml_backend_load",
+    [ctypes.c_char_p],
+    ctypes.c_void_p, # FIXME: should be ggml_backend_reg_t
+)
+def ggml_backend_load(path: str):
+    """Load the specified ggml backend"""
+    ...
+
+# GGML_API void               ggml_backend_load_all(void);
+@ctypes_function(
+    "ggml_backend_load_all",
+    [],
+    None,
+)
+def ggml_backend_load_all():
+    """Load all available ggml backends"""
+    ...
+
+# GGML_API void               ggml_backend_load_all_from_path(const char * dir_path);
+@ctypes_function(
+    "ggml_backend_load_all_from_path",
+    [ctypes.c_char_p],
+    None,
+)
+def ggml_backend_load_all_from_path(dir_path: bytes):
+    """Load all ggml backends from the specified directory"""
+    ...
+
 # // Initialize the llama + ggml backend
 # // If numa is true, use NUMA optimizations
 # // Call once at the start of the program
