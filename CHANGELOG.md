@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.20]
+
+- refactor: Replace deprecated llama.cpp references in library, docs, and examples by @abetlen in #2170
+- feat: Update llama.cpp to ggerganov/llama.cpp@f49e9178767d557a522618b16ce8694f9ddac628 by @abetlen in #2169
+- feat(server): Add model-load `chat_template_kwargs` support and document the CLI/config usage by @abetlen in #2168
+- ci: Publish release wheels as `py3-none` by @Bing-su in #2166
+- fix(ci): Publish distinct manylinux and musllinux CPU wheels by @abetlen in #2165
+
+## [0.3.19]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@c0159f9c1f874da15e94f371d136f5920b4b5335 by @abetlen in #2161
+- fix: Handle embedding models without KV memory and test embeddings with a real GGUF embedding model by @abetlen in #2160
+- fix(ci): Shrink CUDA wheel fatbins so CUDA releases stay under GitHub's asset size limit by @abetlen in #2158
+
+## [0.3.18]
+
+- feat: Expose `attention_type` in `Llama.__init__` for non-causal embedding models by @jamesbiederbeck in #2143
+- fix(ci): Build Docker images from the checked-out source and sanitize branch tags by @abetlen in #2156
+- fix(ci): Fix the CUDA wheel workflow and keep release tags aligned with the built toolkit by @abetlen in #2155
+- fix(ci): Speed up release wheel builds by moving arm64 off QEMU and parallelizing riscv64 by @abetlen in #2154
+
+## [0.3.17]
+
+- feat: Update llama.cpp to ggerganov/llama.cpp@49bfddeca18e62fa3d39114a23e9fcbdf8a22388 and sync Python bindings by @abetlen in #2151
+- fix: Handle Qwen 3.5 hybrid prefix reuse by @codavidgarcia and @r-dh in #2152
+- chore(dev): Add Ruff-based formatting and a safe lint baseline, and run it in CI for pull requests and pushes to `main`
+- fix(ci): Run macOS CI on supported Apple Silicon and Intel runners by @abetlen in #2150
+- fix(ci): Use the `hf` CLI instead of the deprecated `huggingface-cli` name in GitHub Actions and docs by @abetlen in #2149
+- ci: add riscv64 wheel builds to release workflow by @gounthar in #2139
+
 ## [0.3.16]
 
 - feat: Update llama.cpp to ggerganov/llama.cpp@4227c9be4268ac844921b90f31595f81236bd317
