@@ -25,6 +25,9 @@ jobs:
         - arch: "aarch64"
           os: "ubuntu-24.04-arm"
           python3_version: 13
+        - arch: "aarch64"
+          os: "ubuntu-24.04-arm"
+          python3_version: 14
           
         # 32bit ARM (Raspberry pis)
         # - arch: "armv7l"
@@ -35,6 +38,9 @@ jobs:
         - arch: "x86_64"
           os: "ubuntu-24.04"
           python3_version: 13
+        - arch: "x86_64"
+          os: "ubuntu-24.04"
+          python3_version: 14
 
         # 32 bit for older processors
         # - arch: "i686"
