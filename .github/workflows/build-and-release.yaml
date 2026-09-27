@@ -79,7 +79,7 @@ jobs:
           esac
 
   build_wheels_x64:
-    name: Build Linux x86_64 wheel
+    name: Build musllinux x86_64 wheel
     needs: prepare_release
     runs-on: ubuntu-22.04
 
@@ -104,13 +104,13 @@ jobs:
         uses: pypa/cibuildwheel@v4.1.0
         env:
           CIBW_REPAIR_WHEEL_COMMAND: "LD_LIBRARY_PATH=$PWD/llama_cpp/lib auditwheel repair -w {dest_dir} {wheel}"
-          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
-          # wheel.py-api is py3, so one manylinux build covers supported Pythons.
-          CIBW_BUILD: "cp39-manylinux_*"
-          CIBW_SKIP: "*musllinux* pp*"
+          CIBW_MUSLLINUX_X86_64_IMAGE: "musllinux_1_2"
+          # Build only musllinux wheels; wheel.py-api is py3, so one build
+          # covers supported Python versions.
+          CIBW_BUILD: "cp39-musllinux_*"
+          CIBW_SKIP: "pp*"
           CIBW_ARCHS: "x86_64"
-          CIBW_BEFORE_ALL: "manylinux-install-clang -v 21.1.8.1"
-          CIBW_ENVIRONMENT: CC=clang CXX=clang++ CMAKE_ARGS="-DGGML_NATIVE=off -DGGML_CUDA=off"
+          CIBW_ENVIRONMENT: CMAKE_ARGS="-DGGML_NATIVE=off -DGGML_CUDA=off"
         with:
           package-dir: .
           output-dir: wheelhouse
@@ -121,7 +121,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_wheels_arm64:
-    name: Build arm64 wheels
+    name: Build musllinux arm64 wheel
     needs: prepare_release
     runs-on: ubuntu-24.04-arm
     steps:
@@ -132,14 +132,14 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.0
         env:
-          CIBW_SKIP: "*musllinux* pp*"
+          CIBW_SKIP: "pp*"
           CIBW_REPAIR_WHEEL_COMMAND: "LD_LIBRARY_PATH=$PWD/llama_cpp/lib auditwheel repair -w {dest_dir} {wheel}"
           CIBW_ARCHS: "aarch64"
-          CIBW_MANYLINUX_AARCH64_IMAGE: "manylinux2014"
-          CIBW_BEFORE_ALL: "manylinux-install-clang -v 21.1.8.1"
-          CIBW_ENVIRONMENT: CC=clang CXX=clang++ CMAKE_ARGS="-DGGML_NATIVE=off -DGGML_CUDA=off"
-          # wheel.py-api is py3, so one manylinux build covers supported Pythons.
-          CIBW_BUILD: "cp39-manylinux_*"
+          CIBW_MUSLLINUX_AARCH64_IMAGE: "musllinux_1_2"
+          CIBW_ENVIRONMENT: CMAKE_ARGS="-DGGML_NATIVE=off -DGGML_CUDA=off"
+          # Build only musllinux wheels; wheel.py-api is py3, so one build
+          # covers supported Python versions.
+          CIBW_BUILD: "cp39-musllinux_*"
         with:
           output-dir: wheelhouse
 
