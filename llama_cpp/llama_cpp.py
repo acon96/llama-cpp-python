@@ -1340,6 +1340,36 @@ def llama_load_mode_from_str(value: bytes, /) -> int:
 @ctypes_function("llama_ftype_name", [ctypes.c_int], ctypes.c_char_p)
 def llama_ftype_name(ftype: int, /) -> Optional[bytes]:
     '''Get the model file type (quantization) as a string, e.g. "Q8_0" or "Q4_K - Medium"'''
+# GGML_API ggml_backend_reg_t ggml_backend_load(const char * path);
+@ctypes_function(
+    "ggml_backend_load",
+    [ctypes.c_char_p],
+    ctypes.c_void_p,  # FIXME: should be ggml_backend_reg_t
+)
+def ggml_backend_load(path: bytes):
+    """Load the specified ggml backend."""
+    ...
+
+
+# GGML_API void               ggml_backend_load_all(void);
+@ctypes_function(
+    "ggml_backend_load_all",
+    [],
+    None,
+)
+def ggml_backend_load_all():
+    """Load all available ggml backends."""
+    ...
+
+
+# GGML_API void               ggml_backend_load_all_from_path(const char * dir_path);
+@ctypes_function(
+    "ggml_backend_load_all_from_path",
+    [ctypes.c_char_p],
+    None,
+)
+def ggml_backend_load_all_from_path(dir_path: bytes):
+    """Load all ggml backends from the specified directory."""
     ...
 
 
