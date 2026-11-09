@@ -1,4 +1,4 @@
 from .llama_cpp import *
 from .llama import *
 
-__version__ = "0.3.35+homellm"
+__version__ = "0.3.36+homellm"
